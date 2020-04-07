@@ -1,9 +1,11 @@
 "use strict";
 const path = require("path"); //Includes the path internal module
 const fs = require("fs");
+const zlib = require("zlib");
+const Transform = require("stream").Transform; //Helps transform a stream
 //minimist is a remote module that helps retrieve arguments passed via a CLI
 const args = require("minimist")(process.argv.slice(2), {
-  boolean: ["help"],
+  boolean: ["help", "out", "compress", "uncompress"],
   string: ["file"],
 });
 
@@ -37,11 +39,40 @@ function printHelp() {
   console.log("--help                   print this help");
   console.log("--file={FILENAME}        process the file");
   console.log("--in, -                  process stdin file");
-  console.log("");
+  console.log("--out                    print file to stdout");
+  console.log("--compress               gzip the output");
 }
 //processes the given file contents by converting all letters to uppercase
+
 function processFile(inStream) {
   let outStream = inStream;
-  let targetStream = process.stdout;
+  let upperStream = new Transform({
+    transform(chunk, enc, next) {
+      this.push(chunk.toString().toUpperCase());
+      next();
+    },
+  });
+  var OUTFILE = path.join(BASE_PATH, "out.txt");
+
+  if (args.compress) {
+    let gzipStream = zlib.createGzip();
+    outStream = outStream.pipe(gzipStream);
+    OUTFILE = `${OUTFILE}.gz`;
+  }
+
+  if (args.uncompress) {
+    let gunzip = zlib.createGunzip();
+    outStream = outStream.pipe(gunzip);
+    OUTFILE = `${OUTFILE}`;
+  }
+
+  let targetStream;
+
+  if (args.out) {
+    targetStream = process.stdout;
+  } else {
+    targetStream = fs.createWriteStream(OUTFILE);
+  }
+  outStream = outStream.pipe(upperStream);
   outStream.pipe(targetStream);
 }
