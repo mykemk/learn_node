@@ -36,5 +36,12 @@
 
   async function getRecords() {
     recordsList.innerHTML = "...";
+    let responce = await fetch("/get-records");
+    if (responce && responce.ok) {
+      let records = await responce.json();
+      if (records && records.length > 0) {
+        renderRecords(records);
+      }
+    }
   }
 })();
