@@ -32,8 +32,8 @@ function error(msg, includeHelp = false) {
 
 //Function to offer help on how to use the CLI
 function printHelp() {
-  console.log("ex1 usage");
-  console.log("  ex1.js --help");
+  console.log("ex2 usage");
+  console.log("  ex2.js --help");
   console.log("ex1 --file={FILENAME}");
   console.log("");
   console.log("--help                   print this help");
@@ -41,6 +41,7 @@ function printHelp() {
   console.log("--in, -                  process stdin file");
   console.log("--out                    print file to stdout");
   console.log("--compress               gzip the output");
+  console.log("--uncompress             gunzip the output");
 }
 //processes the given file contents by converting all letters to uppercase
 
