@@ -34,7 +34,7 @@
     recordsList.innerHTML = json2html.transform({}, transforms.table);
   }
 
-  async function getRecords() {
+  async function getRecords()
     recordsList.innerHTML = "...";
     let responce = await fetch("/get-records");
     if (responce && responce.ok) {
