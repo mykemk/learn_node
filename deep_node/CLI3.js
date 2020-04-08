@@ -1,7 +1,7 @@
 "use strict";
 const path = require("path"); //Includes the path internal module
 const fs = require("fs");
-const zlib = require("zlib");
+const zlib = require("zlib"); //a module used for compression and decompression
 const Transform = require("stream").Transform; //Helps transform a stream
 //minimist is a remote module that helps retrieve arguments passed via a CLI
 const args = require("minimist")(process.argv.slice(2), {
@@ -9,7 +9,7 @@ const args = require("minimist")(process.argv.slice(2), {
   string: ["file"],
 });
 
-var BASE_PATH = process.env.BASE_PATH || __dirname; //Cconfigures the base path to be set as an environment variable
+var BASE_PATH = process.env.BASE_PATH || __dirname; //Configures the base path to be set as an environment variable
 
 if (args.help) {
   printHelp(); // shows the help when --help is passed as the argument
@@ -50,6 +50,7 @@ function printHelp() {
 //processes the given file contents by converting all letters to uppercase
 
 function streamComplete(stream) {
+  //returns a promise once a stream is complete
   return new Promise(function resolved(res) {
     stream.on("end", res);
   });
@@ -58,33 +59,36 @@ function streamComplete(stream) {
 async function processFile(inStream) {
   let outStream = inStream;
   let upperStream = new Transform({
+    //Transform helps in transforming a chunk in a stream
     transform(chunk, enc, next) {
-      this.push(chunk.toString().toUpperCase());
+      //takes in 3 arguments; a chuck, an encoding  and a function to show end of a transform
+      this.push(chunk.toString().toUpperCase()); //transforms a chunk to uppercase
       next();
     },
   });
-  var OUTFILE = path.join(BASE_PATH, "out.txt");
+  var OUTFILE = path.join(BASE_PATH, "out.txt"); //path.join helps create a full path by joining the base path to the file name
 
   if (args.compress) {
-    let gzipStream = zlib.createGzip();
+    //file compression logic if --compress flag is passed on the CLI
+    let gzipStream = zlib.createGzip(); //uses zlib library to create a compression stream
     outStream = outStream.pipe(gzipStream);
-    OUTFILE = `${OUTFILE}.gz`;
+    OUTFILE = `${OUTFILE}.gz`; //changes the extension of the output file to that of a gzip file
   }
 
   if (args.uncompress) {
-    let gunzip = zlib.createGunzip();
-    outStream = outStream.pipe(gunzip);
+    let gunzip = zlib.createGunzip(); //helps unzip a file when --uncompress flag is passed in the CLI
+    outStream = outStream.pipe(gunzip); //streams the output to an unzip file
     OUTFILE = `${OUTFILE}`;
   }
 
-  let targetStream;
+  let targetStream; //stream on where to output
 
   if (args.out) {
-    targetStream = process.stdout;
+    targetStream = process.stdout; // if an --out flag is passed, then the output happens on the console
   } else {
-    targetStream = fs.createWriteStream(OUTFILE);
+    targetStream = fs.createWriteStream(OUTFILE); //a new file is created with the output stream
   }
-  outStream = outStream.pipe(upperStream);
+  outStream = outStream.pipe(upperStream); //the uppercase stream created by transform() method is piped to the output stream
   outStream.pipe(targetStream);
   await streamComplete(outStream);
 }
